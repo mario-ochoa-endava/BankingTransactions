@@ -1,0 +1,1074 @@
+{
+  "info": {
+    "name": "Banking Transactions API",
+    "description": "Generated from banking-transactions-openapi.yaml (API version 1.1.0). Set baseUrl, bearerToken, and accountId before sending requests. The sandbox URL in the contract is a placeholder. Set payeeAccountId for payments and originalTransactionId for refunds. Successful create requests save a separate transaction ID for each type. PUT replaces all editable fields; omitted optional fields are cleared. Only PENDING transactions can be updated or deleted; other states return 409. DELETE removes the transaction from API reads and lists while retaining internal audit records. Running the entire collection creates, updates, and deletes transactions. Health does not require authentication.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://sandbox.api.example.com/v1",
+      "type": "string",
+      "description": "Replace with your API URL; no trailing slash."
+    },
+    {
+      "key": "bearerToken",
+      "value": "",
+      "type": "string",
+      "description": "Set a valid bearer token before calling transaction endpoints."
+    },
+    {
+      "key": "accountId",
+      "value": "ACCOUNT001",
+      "type": "string",
+      "description": "Replace with an existing 10-character alphanumeric account ID."
+    },
+    {
+      "key": "payeeAccountId",
+      "value": "PAYEE00001",
+      "type": "string",
+      "description": "Replace with an existing 10-character destination account ID."
+    },
+    {
+      "key": "originalTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Set an existing transaction ID eligible for a refund."
+    },
+    {
+      "key": "limit",
+      "value": "20",
+      "type": "string",
+      "description": "Page size: 1 to 100."
+    },
+    {
+      "key": "offset",
+      "value": "0",
+      "type": "string",
+      "description": "Non-negative number of transactions to skip."
+    },
+    {
+      "key": "depositTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Set an existing deposit ID, or send Create to capture its returned ID automatically."
+    },
+    {
+      "key": "withdrawalTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Set an existing withdrawal ID, or send Create to capture its returned ID automatically."
+    },
+    {
+      "key": "refundTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Set an existing refund ID, or send Create to capture its returned ID automatically."
+    },
+    {
+      "key": "checkTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Set an existing check ID, or send Create to capture its returned ID automatically."
+    },
+    {
+      "key": "paymentTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Set an existing payment ID, or send Create to capture its returned ID automatically."
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Check service health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Operation: getHealth. Documented HTTP responses: 200, 503. Returns {\"status\":\"UP\"} with 200 or {\"status\":\"DOWN\"} with 503.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Deposits",
+      "item": [
+        {
+          "name": "Create a deposit transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/deposits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "deposits"
+              ]
+            },
+            "description": "Operation: createDeposit. Documented HTTP responses: 201, 400, 401, 409, 500.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Example deposit\",\n  \"source\": \"External transfer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const transaction = pm.response.json();",
+                  "    if (typeof transaction.transactionId === \"string\" && transaction.transactionId.length > 0) {",
+                  "        pm.collectionVariables.set(\"depositTransactionId\", transaction.transactionId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List deposits",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/deposits?limit={{limit}}&offset={{offset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "deposits"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{limit}}"
+                },
+                {
+                  "key": "offset",
+                  "value": "{{offset}}"
+                }
+              ]
+            },
+            "description": "Operation: listDeposits. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Get a deposit transaction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/deposits/{{depositTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "deposits",
+                "{{depositTransactionId}}"
+              ]
+            },
+            "description": "Operation: getDeposit. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a pending deposit transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/deposits/{{depositTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "deposits",
+                "{{depositTransactionId}}"
+              ]
+            },
+            "description": "Operation: updateDeposit. Documented HTTP responses: 200, 400, 401, 404, 409, 500. Replaces editable fields of a PENDING transaction. Omitted optional fields are cleared. Returns 404 for a missing transaction and 409 for a non-pending transaction.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Updated deposit\",\n  \"source\": \"External transfer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a pending deposit transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/deposits/{{depositTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "deposits",
+                "{{depositTransactionId}}"
+              ]
+            },
+            "description": "Operation: deleteDeposit. Documented HTTP responses: 204, 400, 401, 404, 409, 500. Deletes a PENDING transaction and prevents processing. Later reads return 404. Returns 409 for a non-pending transaction."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Withdrawals",
+      "item": [
+        {
+          "name": "Create a withdrawal transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/withdrawals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "withdrawals"
+              ]
+            },
+            "description": "Operation: createWithdrawal. Documented HTTP responses: 201, 400, 401, 402, 409, 500.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Example withdrawal\",\n  \"channel\": \"MOBILE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const transaction = pm.response.json();",
+                  "    if (typeof transaction.transactionId === \"string\" && transaction.transactionId.length > 0) {",
+                  "        pm.collectionVariables.set(\"withdrawalTransactionId\", transaction.transactionId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List withdrawals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/withdrawals?limit={{limit}}&offset={{offset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "withdrawals"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{limit}}"
+                },
+                {
+                  "key": "offset",
+                  "value": "{{offset}}"
+                }
+              ]
+            },
+            "description": "Operation: listWithdrawals. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Get a withdrawal transaction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/withdrawals/{{withdrawalTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "withdrawals",
+                "{{withdrawalTransactionId}}"
+              ]
+            },
+            "description": "Operation: getWithdrawal. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a pending withdrawal transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/withdrawals/{{withdrawalTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "withdrawals",
+                "{{withdrawalTransactionId}}"
+              ]
+            },
+            "description": "Operation: updateWithdrawal. Documented HTTP responses: 200, 400, 401, 402, 404, 409, 500. Replaces editable fields of a PENDING transaction. Omitted optional fields are cleared. Returns 404 for a missing transaction and 409 for a non-pending transaction.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Updated withdrawal\",\n  \"channel\": \"MOBILE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a pending withdrawal transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/withdrawals/{{withdrawalTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "withdrawals",
+                "{{withdrawalTransactionId}}"
+              ]
+            },
+            "description": "Operation: deleteWithdrawal. Documented HTTP responses: 204, 400, 401, 404, 409, 500. Deletes a PENDING transaction and prevents processing. Later reads return 404. Returns 409 for a non-pending transaction."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Refunds",
+      "item": [
+        {
+          "name": "Create a refund transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/refunds",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "refunds"
+              ]
+            },
+            "description": "Operation: createRefund. Documented HTTP responses: 201, 400, 401, 404, 500.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Example refund\",\n  \"originalTransactionId\": \"{{originalTransactionId}}\",\n  \"reason\": \"Duplicate charge\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const transaction = pm.response.json();",
+                  "    if (typeof transaction.transactionId === \"string\" && transaction.transactionId.length > 0) {",
+                  "        pm.collectionVariables.set(\"refundTransactionId\", transaction.transactionId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List refunds",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/refunds?limit={{limit}}&offset={{offset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "refunds"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{limit}}"
+                },
+                {
+                  "key": "offset",
+                  "value": "{{offset}}"
+                }
+              ]
+            },
+            "description": "Operation: listRefunds. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Get a refund transaction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/refunds/{{refundTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "refunds",
+                "{{refundTransactionId}}"
+              ]
+            },
+            "description": "Operation: getRefund. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a pending refund transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/refunds/{{refundTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "refunds",
+                "{{refundTransactionId}}"
+              ]
+            },
+            "description": "Operation: updateRefund. Documented HTTP responses: 200, 400, 401, 404, 409, 500. Replaces editable fields of a PENDING transaction. Omitted optional fields are cleared. Returns 404 for a missing transaction and 409 for a non-pending transaction.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Updated refund\",\n  \"originalTransactionId\": \"{{originalTransactionId}}\",\n  \"reason\": \"Duplicate charge\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a pending refund transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/refunds/{{refundTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "refunds",
+                "{{refundTransactionId}}"
+              ]
+            },
+            "description": "Operation: deleteRefund. Documented HTTP responses: 204, 400, 401, 404, 409, 500. Deletes a PENDING transaction and prevents processing. Later reads return 404. Returns 409 for a non-pending transaction."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Checks",
+      "item": [
+        {
+          "name": "Create a check transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/checks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "checks"
+              ]
+            },
+            "description": "Operation: createCheck. Documented HTTP responses: 201, 400, 401, 404, 409, 500.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Example check\",\n  \"checkNumber\": \"1025\",\n  \"payee\": \"Acme Corp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const transaction = pm.response.json();",
+                  "    if (typeof transaction.transactionId === \"string\" && transaction.transactionId.length > 0) {",
+                  "        pm.collectionVariables.set(\"checkTransactionId\", transaction.transactionId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List checks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/checks?limit={{limit}}&offset={{offset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "checks"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{limit}}"
+                },
+                {
+                  "key": "offset",
+                  "value": "{{offset}}"
+                }
+              ]
+            },
+            "description": "Operation: listChecks. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Get a check transaction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/checks/{{checkTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "checks",
+                "{{checkTransactionId}}"
+              ]
+            },
+            "description": "Operation: getCheck. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a pending check transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/checks/{{checkTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "checks",
+                "{{checkTransactionId}}"
+              ]
+            },
+            "description": "Operation: updateCheck. Documented HTTP responses: 200, 400, 401, 404, 409, 500. Replaces editable fields of a PENDING transaction. Omitted optional fields are cleared. Returns 404 for a missing transaction and 409 for a non-pending transaction.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Updated check\",\n  \"checkNumber\": \"1025\",\n  \"payee\": \"Acme Corp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a pending check transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/checks/{{checkTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "checks",
+                "{{checkTransactionId}}"
+              ]
+            },
+            "description": "Operation: deleteCheck. Documented HTTP responses: 204, 400, 401, 404, 409, 500. Deletes a PENDING transaction and prevents processing. Later reads return 404. Returns 409 for a non-pending transaction."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create a payment transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "payments"
+              ]
+            },
+            "description": "Operation: createPayment. Documented HTTP responses: 201, 400, 401, 404, 409, 500.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Example payment\",\n  \"payeeAccountId\": \"{{payeeAccountId}}\",\n  \"reference\": \"INVOICE-8452\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const transaction = pm.response.json();",
+                  "    if (typeof transaction.transactionId === \"string\" && transaction.transactionId.length > 0) {",
+                  "        pm.collectionVariables.set(\"paymentTransactionId\", transaction.transactionId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/payments?limit={{limit}}&offset={{offset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{limit}}"
+                },
+                {
+                  "key": "offset",
+                  "value": "{{offset}}"
+                }
+              ]
+            },
+            "description": "Operation: listPayments. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Get a payment transaction",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/payments/{{paymentTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "payments",
+                "{{paymentTransactionId}}"
+              ]
+            },
+            "description": "Operation: getPayment. Documented HTTP responses: 200, 400, 401, 404, 500."
+          },
+          "response": []
+        },
+        {
+          "name": "Replace a pending payment transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/payments/{{paymentTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "payments",
+                "{{paymentTransactionId}}"
+              ]
+            },
+            "description": "Operation: updatePayment. Documented HTTP responses: 200, 400, 401, 402, 404, 409, 500. Replaces editable fields of a PENDING transaction. Omitted optional fields are cleared. Returns 404 for a missing transaction and 409 for a non-pending transaction.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.0,\n  \"currency\": \"USD\",\n  \"description\": \"Updated payment\",\n  \"payeeAccountId\": \"{{payeeAccountId}}\",\n  \"reference\": \"INVOICE-8452\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a pending payment transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/accounts/{{accountId}}/transactions/payments/{{paymentTransactionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "payments",
+                "{{paymentTransactionId}}"
+              ]
+            },
+            "description": "Operation: deletePayment. Documented HTTP responses: 204, 400, 401, 404, 409, 500. Deletes a PENDING transaction and prevents processing. Later reads return 404. Returns 409 for a non-pending transaction."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
