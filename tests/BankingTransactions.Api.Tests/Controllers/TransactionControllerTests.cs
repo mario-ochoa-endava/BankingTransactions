@@ -3,6 +3,7 @@ using BankingTransactions.Api.Controllers;
 using BankingTransactions.Api.Models;
 using BankingTransactions.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace BankingTransactions.Api.Tests.Controllers;
@@ -112,30 +113,35 @@ public abstract class TransactionControllerTests<TRequest> where TRequest : Tran
 
 public sealed class DepositsControllerTests : TransactionControllerTests<DepositRequest>
 {
-    protected override TransactionsControllerBase<DepositRequest> Controller(ITransactionService<DepositRequest> service) => new DepositsController(service);
+    protected override TransactionsControllerBase<DepositRequest> Controller(ITransactionService<DepositRequest> service) =>
+        new DepositsController(service, NullLogger<TransactionsControllerBase<DepositRequest>>.Instance);
     protected override DepositRequest Request() => new() { Amount = 25m, Currency = "USD", Source = "External transfer" };
 }
 
 public sealed class WithdrawalsControllerTests : TransactionControllerTests<WithdrawalRequest>
 {
-    protected override TransactionsControllerBase<WithdrawalRequest> Controller(ITransactionService<WithdrawalRequest> service) => new WithdrawalsController(service);
+    protected override TransactionsControllerBase<WithdrawalRequest> Controller(ITransactionService<WithdrawalRequest> service) =>
+        new WithdrawalsController(service, NullLogger<TransactionsControllerBase<WithdrawalRequest>>.Instance);
     protected override WithdrawalRequest Request() => new() { Amount = 25m, Currency = "USD", Channel = "MOBILE" };
 }
 
 public sealed class RefundsControllerTests : TransactionControllerTests<RefundRequest>
 {
-    protected override TransactionsControllerBase<RefundRequest> Controller(ITransactionService<RefundRequest> service) => new RefundsController(service);
+    protected override TransactionsControllerBase<RefundRequest> Controller(ITransactionService<RefundRequest> service) =>
+        new RefundsController(service, NullLogger<TransactionsControllerBase<RefundRequest>>.Instance);
     protected override RefundRequest Request() => new() { Amount = 25m, Currency = "USD", OriginalTransactionId = "deposits-completed" };
 }
 
 public sealed class ChecksControllerTests : TransactionControllerTests<CheckRequest>
 {
-    protected override TransactionsControllerBase<CheckRequest> Controller(ITransactionService<CheckRequest> service) => new ChecksController(service);
+    protected override TransactionsControllerBase<CheckRequest> Controller(ITransactionService<CheckRequest> service) =>
+        new ChecksController(service, NullLogger<TransactionsControllerBase<CheckRequest>>.Instance);
     protected override CheckRequest Request() => new() { Amount = 25m, Currency = "USD", CheckNumber = "1025" };
 }
 
 public sealed class PaymentsControllerTests : TransactionControllerTests<PaymentRequest>
 {
-    protected override TransactionsControllerBase<PaymentRequest> Controller(ITransactionService<PaymentRequest> service) => new PaymentsController(service);
+    protected override TransactionsControllerBase<PaymentRequest> Controller(ITransactionService<PaymentRequest> service) =>
+        new PaymentsController(service, NullLogger<TransactionsControllerBase<PaymentRequest>>.Instance);
     protected override PaymentRequest Request() => new() { Amount = 25m, Currency = "USD", PayeeAccountId = "PAYEE00001" };
 }

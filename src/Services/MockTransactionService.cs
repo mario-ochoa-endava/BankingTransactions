@@ -9,7 +9,7 @@ public sealed class MockTransactionService<TRequest>(MockTransactionStore store,
     : ITransactionService<TRequest> where TRequest : TransactionRequest
 {
     public TransactionResponse Create(string accountId, TRequest request)
-    {
+    {        
         lock (store.SyncRoot)
         {
             EnsureAvailable();
@@ -18,7 +18,7 @@ public sealed class MockTransactionService<TRequest>(MockTransactionStore store,
             store.Transactions.Add(response.TransactionId, new(accountId, typeof(TRequest), response));
             store.Record(accountId, response.TransactionId, "CREATE");
             return response;
-        }
+        }        
     }
 
     public TransactionListResponse List(string accountId, int limit, int offset)

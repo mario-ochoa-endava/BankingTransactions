@@ -2,6 +2,7 @@ using BankingTransactions.Api.Contracts;
 using BankingTransactions.Api.Controllers;
 using BankingTransactions.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace BankingTransactions.Api.Tests.Controllers;
@@ -15,7 +16,7 @@ public sealed class HealthControllerTests
     {
         var service = new Mock<IHealthService>(MockBehavior.Strict);
         service.Setup(x => x.IsHealthy()).Returns(healthy);
-        var result = Assert.IsType<ObjectResult>(new HealthController(service.Object).Get().Result);
+        var result = Assert.IsType<ObjectResult>(new HealthController(service.Object, NullLogger<HealthController>.Instance).Get().Result);
         Assert.Equal(code, result.StatusCode);
         Assert.Equal(status, Assert.IsType<HealthResponse>(result.Value).Status);
         service.Verify(x => x.IsHealthy(), Times.Once);

@@ -73,6 +73,45 @@ public sealed class ContractTests
         Assert.Equal(new[] { "CREATE", "UPDATE", "DELETE" }, audit.Select(x => x.Action));
     }
 
+    [Fact]
+    public async Task Create_requires_admin_role_while_read_endpoints_allow_other_roles()
+    {
+        using var app = new ApiFactory();
+        using var client = app.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new("Bearer", ApiFactory.CreateToken(role: "user"));
+        var collection = Collection("deposits");
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(collection)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await client.PostAsJsonAsync(collection, Body("deposits"))).StatusCode);
+    }
+
+    [Fact]
+    public async Task Correlation_id_is_returned_and_used_in_error_response()
+    {
+        const string correlationId = "integration-test-correlation_123";
+        using var app = new ApiFactory();
+        using var client = app.AuthenticatedClient();
+        client.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
+
+        var response = await client.GetAsync(Collection("deposits") + "/missing");
+        Assert.Equal(correlationId, Assert.Single(response.Headers.GetValues("X-Correlation-Id")));
+        var error = (await response.Content.ReadFromJsonAsync<ErrorResponse>())!;
+        Assert.Equal(correlationId, error.Error.RequestId);
+    }
+
+    [Fact]
+    public async Task Missing_correlation_id_is_generated_and_returned()
+    {
+        using var app = new ApiFactory();
+        using var client = app.CreateClient();
+
+        var response = await client.GetAsync("/v1/health");
+        var correlationId = Assert.Single(response.Headers.GetValues("X-Correlation-Id"));
+
+        Assert.True(Guid.TryParse(correlationId, out _));
+    }
+
     [Theory, MemberData(nameof(Kinds))]
     public async Task Completed_transactions_are_immutable(string kind)
     {
@@ -99,6 +138,16 @@ public sealed class ContractTests
         var response = await client.GetAsync(collection);
         await AssertError(response, 401, "authorization");
         Assert.Equal("Bearer", Assert.Single(response.Headers.WwwAuthenticate).Scheme);
+
+        foreach (var token in new[]
+                 {
+                     ApiFactory.CreateToken(signingKey: "different-signing-key-that-is-over-32-bytes"),
+                     ApiFactory.CreateToken(expires: DateTime.UtcNow.AddMinutes(-10))
+                 })
+        {
+            client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+            await AssertError(await client.GetAsync(collection), 401, "authorization");
+        }
     }
 
     [Theory, MemberData(nameof(Kinds))]

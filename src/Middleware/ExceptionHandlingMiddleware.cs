@@ -6,6 +6,9 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
 {
     public async Task InvokeAsync(HttpContext context)
     {
+
+        //Logic
+
         try { await next(context); }
         catch (ApiException exception) when (!context.Response.HasStarted)
         {

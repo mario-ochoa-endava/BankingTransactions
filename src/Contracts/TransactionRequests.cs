@@ -6,7 +6,7 @@ public abstract record TransactionRequest : IValidatableObject
 {
     [Required]
     public decimal? Amount { get; init; }
-
+        
     [RegularExpression("^[A-Z]{3}$")]
     public string? Currency { get; init; }
 
