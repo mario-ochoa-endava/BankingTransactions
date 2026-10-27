@@ -112,6 +112,23 @@ public sealed class ContractTests
         Assert.True(Guid.TryParse(correlationId, out _));
     }
 
+    [Fact]
+    public async Task Deposits_endpoint_returns_too_many_requests_after_configured_limit()
+    {
+        using var app = new ApiFactory();
+        app.Settings["RateLimiting:Deposits:PermitLimit"] = "2";
+        app.Settings["RateLimiting:Deposits:WindowSeconds"] = "60";
+        using var client = app.AuthenticatedClient();
+        var collection = Collection("deposits");
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(collection)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(collection)).StatusCode);
+        var limited = await client.GetAsync(collection);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.Equal("1", Assert.Single(limited.Headers.GetValues("Retry-After")));
+    }
+
     [Theory, MemberData(nameof(Kinds))]
     public async Task Completed_transactions_are_immutable(string kind)
     {

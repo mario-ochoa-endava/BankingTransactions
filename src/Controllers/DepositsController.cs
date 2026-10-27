@@ -3,10 +3,13 @@ using BankingTransactions.Api.Contracts;
 using BankingTransactions.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BankingTransactions.Api.Controllers;
 
 [Route("v1/accounts/{accountId}/transactions/deposits")]
+[EnableRateLimiting("deposit-endpoint")]
+[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
 public sealed class DepositsController(ITransactionService<DepositRequest> service,
     ILogger<TransactionsControllerBase<DepositRequest>> logger)
     : TransactionsControllerBase<DepositRequest>(service, logger)

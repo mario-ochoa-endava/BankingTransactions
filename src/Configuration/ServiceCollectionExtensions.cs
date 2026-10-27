@@ -5,6 +5,7 @@ using BankingTransactions.Api.Middleware;
 using BankingTransactions.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace BankingTransactions.Api.Configuration;
@@ -16,9 +17,29 @@ public static class ServiceCollectionExtensions
         var signingKey = configuration["Jwt:SigningKey"];
         if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingKey) < 32)
             throw new InvalidOperationException("Jwt:SigningKey must be configured with at least 32 UTF-8 bytes.");
+        var depositPermitLimit = configuration.GetValue("RateLimiting:Deposits:PermitLimit", 100);
+        var depositWindowSeconds = configuration.GetValue("RateLimiting:Deposits:WindowSeconds", 1);
+        if (depositPermitLimit < 1 || depositWindowSeconds < 1)
+            throw new InvalidOperationException("Deposit rate-limit values must be positive.");
 
         services.AddOptions<MockApiOptions>().Bind(configuration.GetSection(MockApiOptions.SectionName))
             .Validate(x => x.AvailableBalance >= 0, "Available balance must not be negative.").ValidateOnStart();
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = (context, _) =>
+            {
+                context.HttpContext.Response.Headers["Retry-After"] = "1";
+                return ValueTask.CompletedTask;
+            };
+            options.AddFixedWindowLimiter("deposit-endpoint", limiterOptions =>
+            {
+                limiterOptions.PermitLimit = depositPermitLimit;
+                limiterOptions.Window = TimeSpan.FromSeconds(depositWindowSeconds);
+                limiterOptions.QueueLimit = 0;
+                limiterOptions.AutoReplenishment = true;
+            });
+        });
         services.AddSingleton<MockTransactionStore>();
         services.AddSingleton(typeof(ITransactionService<>), typeof(MockTransactionService<>));
         services.AddSingleton<IHealthService, MockHealthService>();
